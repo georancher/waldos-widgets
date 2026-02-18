@@ -1,0 +1,14 @@
+{
+  "name": "waldos-widgets",
+  "version": "1.0.0",
+  "description": "Demo website integrating ViziPass authentication",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "jwks-rsa": "^3.0.0"
+  }
+}
