@@ -26,15 +26,15 @@ app.use(express.static(__dirname));
 
 // ViziPass OIDC Configuration
 const VIZIPASS_CONFIG = {
-  issuer: 'http://localhost:4000',
-  authorization_endpoint: 'http://localhost:4000/oauth2/authorize',
-  token_endpoint: 'http://localhost:4000/oauth2/token',
-  jwks_uri: 'http://localhost:4000/.well-known/jwks.json',
+  issuer: 'https://vizipass.com',
+  authorization_endpoint: 'https://vizipass.com/oauth2/authorize',
+  token_endpoint: 'https://vizipass.com/oauth2/token',
+  jwks_uri: 'https://vizipass.com/.well-known/jwks.json',
 
   // Client credentials (registered with ViziPass)
-  client_id: 'test_client',
-  client_secret: 'test_secret_123',
-  redirect_uri: 'http://localhost:3000/callback'
+  client_id: 'waldos_widgets',
+  client_secret: 'waldos_secret_2024',
+  redirect_uri: 'https://9q9.net/callback'
 };
 
 // In-memory session store (use Redis/DB in production)
@@ -471,9 +471,11 @@ function exchangeCode(code, codeVerifier) {
     });
 
     const url = new URL(VIZIPASS_CONFIG.token_endpoint);
+    const isHttps = url.protocol === 'https:';
+    const transport = isHttps ? https : http;
     const options = {
       hostname: url.hostname,
-      port: url.port || 80,
+      port: url.port || (isHttps ? 443 : 80),
       path: url.pathname,
       method: 'POST',
       headers: {
@@ -482,7 +484,7 @@ function exchangeCode(code, codeVerifier) {
       }
     };
 
-    const req = http.request(options, (res) => {
+    const req = transport.request(options, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
@@ -516,9 +518,11 @@ function fetchChallenge(state, nonce, codeChallenge) {
     });
 
     const url = new URL(VIZIPASS_CONFIG.issuer + '/api/v1/auth/challenge-session');
+    const isHttps = url.protocol === 'https:';
+    const transport = isHttps ? https : http;
     const options = {
       hostname: url.hostname,
-      port: url.port || 80,
+      port: url.port || (isHttps ? 443 : 80),
       path: url.pathname,
       method: 'POST',
       headers: {
@@ -527,7 +531,7 @@ function fetchChallenge(state, nonce, codeChallenge) {
       }
     };
 
-    const req = http.request(options, (res) => {
+    const req = transport.request(options, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
@@ -559,9 +563,12 @@ app.get('/check-auth', async (req, res) => {
   try {
     // Check with ViziPass if auth is complete
     const checkUrl = `${VIZIPASS_CONFIG.issuer}/api/v1/auth/check/${auth_request_id}`;
+    const parsedUrl = new URL(checkUrl);
+    const isHttps = parsedUrl.protocol === 'https:';
+    const transport = isHttps ? https : http;
 
     const response = await new Promise((resolve, reject) => {
-      http.get(checkUrl, (httpRes) => {
+      transport.get(checkUrl, (httpRes) => {
         let data = '';
         httpRes.on('data', chunk => data += chunk);
         httpRes.on('end', () => {
